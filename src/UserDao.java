@@ -27,6 +27,7 @@ public class UserDao {
             resultUser.setUname(rs.getString("Uname"));
             resultUser.setPassword(rs.getString("PassWord"));
             resultUser.setStatus(rs.getInt("Status"));
+            resultUser.setIsAdmin(rs.getInt("isAdmin"));
         }
         pstmt.close();
         return resultUser;

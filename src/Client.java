@@ -72,9 +72,11 @@ public class Client {
             My = userDao.Login(con,u);
             if(My == null ){
                 System.out.println("登录失败,账号不存在或密码错误!");
+                DbUtil.disConnection(con);
                 return false;
             }else{
                 System.out.println("登录成功!");
+                DbUtil.disConnection(con);
                 return true;
             }
         } catch (Exception e) {
@@ -135,6 +137,7 @@ public class Client {
             obj.put("type","User");
             obj.put("Uname",My.getUname());
             obj.put("Status",My.getStatus());
+            obj.put("isAdmin",My.getIsAdmin());
             oout.writeObject(obj);
             oout.flush();
             new Thread(new ClientListen(socket,My,oin)).start();
@@ -236,7 +239,7 @@ class ClientSend implements Runnable{
             while(true){
                 String str = scan.nextLine();
                 JSONObject obj = new JSONObject();
-                if(str.equals("syscall")){
+                if(str.equals("syscall") && My.getIsAdmin() == 1){//只有管理员才能试用
                     System.out.println("进入管理员模式!");
                     Admin();
                 } else{
@@ -264,7 +267,48 @@ class ClientSend implements Runnable{
      */
     public void Admin() throws IOException{
         while(true){
+            System.out.print("请输入以下五个命令(AddAdmin,Ban,DisBan,Exit,BroadCast):");
             String str = scan.nextLine();
+            String name ;
+            JSONObject obj = new JSONObject();
+            obj.put("type","syscall");
+            switch (str){
+                case "AddAdmin":
+                    System.out.print("请输入你要设置成管理员的用户名:");
+                    name = scan.nextLine();
+                    obj.put("command","AddAdmin");
+                    obj.put("Uname",name);
+                    oout.writeObject(obj);
+                    oout.flush();
+                    break;
+                case "Ban":
+                    System.out.print("请输入你要禁言的用户名:");
+                    name = scan.nextLine();
+                    obj.put("command","Ban");
+                    obj.put("Uname",name);
+                    oout.writeObject(obj);
+                    oout.flush();
+                    break;
+                case "DisBan":
+                    System.out.print("请输入你要解禁的用户名:");
+                    name = scan.nextLine();
+                    obj.put("command","DisBan");
+                    obj.put("Uname",name);
+                    oout.writeObject(obj);
+                    oout.flush();
+                    break;
+                case "BroadCast":
+                    System.out.print("请输入广播内容:");
+                    name = scan.nextLine();
+                    obj.put("command","BroadCast");
+                    obj.put("msg",name);
+                    oout.writeObject(obj);
+                    oout.flush();
+                    break;
+                case "Exit":
+                    System.out.println("退出管理员模式!");
+                    return;
+            }
         }
     }
 }

@@ -80,15 +80,18 @@ class ListenServer implements Runnable{
                         //out.close();
                     }
                 }else if(obj.get("type").equals("User")){
-                    //System.out.println(obj);//测试obj是否发送成功
+                    System.out.println(obj);//测试obj是否发送成功
                     User u = new User();
                     u.setUname(obj.get("Uname").toString());
                     u.setStatus((Integer) obj.get("Status"));
+                    u.setIsAdmin((Integer) obj.get("isAdmin"));
                     Uname = u.getUname();
                     Server.userHashMap.put(u.getUname(),u);
                     Server.socketHashMap.put(u.getUname(),socket);
                     //System.out.println(u.getUname());//测试User类1
                     //System.out.println(u.getStatus());//测试User类2
+                }else if(obj.get("type").equals("syscall")){//系统调用
+                    System.out.println(obj);//测试能否正常收到syscall
                 }
             }
         }catch (Exception e){
