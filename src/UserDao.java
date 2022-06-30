@@ -26,6 +26,7 @@ public class UserDao {
             resultUser.setUID(rs.getInt("UID"));
             resultUser.setUname(rs.getString("Uname"));
             resultUser.setPassword(rs.getString("PassWord"));
+            resultUser.setStatus(rs.getInt("Status"));
         }
         pstmt.close();
         return resultUser;
@@ -50,5 +51,23 @@ public class UserDao {
         pstmt.close();
         //插入新用户↑
         return result;
+    }
+
+    /**
+     * 管理员修改用户状态
+     * @param con 连接数据库的Connection类
+     * @param u 用户类
+     * @return 修改状态成功时返回1,否则返回0
+     * @throws Exception
+     */
+    public boolean changeStatus(Connection con,User u) throws Exception{
+        String sql = "UPDATE User SET Status = ? WHERE Uname = ?";
+        PreparedStatement pstmt = con.prepareStatement(sql);
+        pstmt.setInt(1,u.getStatus());
+        pstmt.setString(2,u.getUname());
+        int result = pstmt.executeUpdate();
+        pstmt.close();
+        if ( result <= 0 ) return false;
+        return true;
     }
 }

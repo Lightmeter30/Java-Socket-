@@ -129,6 +129,14 @@ public class Client {
             BufferedReader oin =new BufferedReader(new InputStreamReader(socket.getInputStream()));
             //ObjectInputStream oin = new ObjectInputStream(socket.getInputStream());
             //executorService.submit(new ClientListen(socket,My,oin));
+
+            //发送用户信息给客户端
+            JSONObject obj = new JSONObject();
+            obj.put("type","User");
+            obj.put("Uname",My.getUname());
+            obj.put("Status",My.getStatus());
+            oout.writeObject(obj);
+            oout.flush();
             new Thread(new ClientListen(socket,My,oin)).start();
             //executorService.submit(new ClientSend(socket,My,oout));
             new Thread(new ClientSend(socket,My,oout)).start();
@@ -213,6 +221,7 @@ class ClientSend implements Runnable{
     private Socket socket;
     private User My;
     private ObjectOutputStream oout;
+    private Scanner scan = new Scanner(System.in);
     public ClientSend (Socket socket,User My,ObjectOutputStream oout){
         this.socket = socket;
         this.My = My;
@@ -222,17 +231,22 @@ class ClientSend implements Runnable{
     @Override
     public void run(){
         try {
-            Scanner scan = new Scanner(System.in);
+            //Scanner scan = new Scanner(System.in);
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             while(true){
                 String str = scan.nextLine();
                 JSONObject obj = new JSONObject();
-                obj.put("type","chat");
-                obj.put("msg",str);
-                obj.put("Uname",My.getUname());
-                obj.put("Time",df.format(System.currentTimeMillis()));
-                oout.writeObject(obj);
-                oout.flush();
+                if(str.equals("syscall")){
+                    System.out.println("进入管理员模式!");
+                    Admin();
+                } else{
+                    obj.put("type","chat");
+                    obj.put("msg",str);
+                    obj.put("Uname",My.getUname());
+                    obj.put("Time",df.format(System.currentTimeMillis()));
+                    oout.writeObject(obj);
+                    oout.flush();
+                }
             }
         } catch (IOException e) {
             try {
@@ -241,6 +255,16 @@ class ClientSend implements Runnable{
                 ex.printStackTrace();
             }
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * 管理者模式
+     * @throws IOException
+     */
+    public void Admin() throws IOException{
+        while(true){
+            String str = scan.nextLine();
         }
     }
 }

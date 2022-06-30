@@ -13,7 +13,8 @@ import java.util.concurrent.Executors;
  * @author 周文瑞 20373804
  */
 public class Server {
-    public static HashMap<Integer,Socket> socketHashMap = new HashMap<>();
+    public static HashMap<String,Socket> socketHashMap = new HashMap<>();
+    public static HashMap<String,User> userHashMap = new HashMap<>();
     public static int count = 0;
     /**
      * 这是服务端的入口
@@ -30,7 +31,7 @@ public class Server {
             while(true){
                 boolean t = true;
                 Socket socket = serverSocket.accept();
-                socketHashMap.put(count,socket);
+                //socketHashMap.put(count,socket);
                 executorService.submit( new ListenServer(count,socket) );
                 //executorService.submit(new ServerSend(count,socket));
                 //new Thread(new ListenServer(count,socket)).start();
@@ -55,6 +56,7 @@ public class Server {
 class ListenServer implements Runnable{
     private Socket socket;
     private int thisCount;
+    private String Uname;
     public ListenServer(int thisCount,Socket socket){
         this.thisCount = thisCount;
         this.socket = socket;
@@ -69,7 +71,7 @@ class ListenServer implements Runnable{
                 if(obj.get("type").equals("chat")){
                     System.out.println(obj.get("Time")+" "+obj.get("Uname")+":"+obj.get("msg"));
                     //BufferedWriter out =new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                    for(Integer i: Server.socketHashMap.keySet())
+                    for(String i: Server.socketHashMap.keySet())
                     {
                         BufferedWriter out =new BufferedWriter(new OutputStreamWriter(Server.socketHashMap.get(i).getOutputStream()));
                         out.write(obj.get("Time")+" "+obj.get("Uname")+":"+obj.get("msg"));
@@ -77,22 +79,16 @@ class ListenServer implements Runnable{
                         out.flush();
                         //out.close();
                     }
-                    //out.writeObject(obj);
-                    //out.flush();
-/*
-                    //向客户端写
-                    JSONObject obj1 = new JSONObject();
-                    obj1.put("type","chat");
-                    obj1.put("Time",obj.get("Time"));
-                    obj1.put("Uname",obj.get("Uname"));
-                    obj1.put("msg",obj.get("msg"));
-                    for(Integer i: Server.socketHashMap.keySet())
-                    {
-                        ObjectOutputStream oout1 = new ObjectOutputStream(Server.socketHashMap.get(i).getOutputStream());
-                        oout1.writeObject(obj1);
-                        oout1.flush();
-                        oout1.close();
-                    }*/
+                }else if(obj.get("type").equals("User")){
+                    //System.out.println(obj);//测试obj是否发送成功
+                    User u = new User();
+                    u.setUname(obj.get("Uname").toString());
+                    u.setStatus((Integer) obj.get("Status"));
+                    Uname = u.getUname();
+                    Server.userHashMap.put(u.getUname(),u);
+                    Server.socketHashMap.put(u.getUname(),socket);
+                    //System.out.println(u.getUname());//测试User类1
+                    //System.out.println(u.getStatus());//测试User类2
                 }
             }
         }catch (Exception e){
@@ -100,7 +96,7 @@ class ListenServer implements Runnable{
         }finally {
             try {
                 socket.close();
-                Server.socketHashMap.remove(thisCount);
+                Server.socketHashMap.remove(Uname);
             } catch (IOException e) {
                 e.printStackTrace();
             }
