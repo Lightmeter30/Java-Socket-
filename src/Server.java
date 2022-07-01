@@ -19,7 +19,7 @@ public class Server {
     public static int count = 0;
     /**
      * 这是服务端的入口
-     *  @author 周文瑞 20373804
+     *  @author takune
      * @param args
      */
     public static void main(String[] args){
@@ -30,17 +30,9 @@ public class Server {
             ExecutorService executorService = Executors.newFixedThreadPool(100);
 
             while(true){
-                boolean t = true;
                 Socket socket = serverSocket.accept();
-                //socketHashMap.put(count,socket);
                 executorService.submit( new ListenServer(count,socket) );
-                //executorService.submit(new ServerSend(count,socket));
-                //new Thread(new ListenServer(count,socket)).start();
-                //if(t){
-                    //new Thread(new ServerSend()).start();
-                    //executorService.submit(new ServerSend(count,socket));
-                    //t = false;
-                //}
+
                 System.out.println(count);
                 count++;
             }
@@ -52,7 +44,7 @@ public class Server {
 
 /**
  * 这个类是用来监听是否有客户端接入服务端
- *  @author 周文瑞 20373804
+ *  @author  takune
  */
 class ListenServer implements Runnable{
     private Socket socket;
@@ -72,13 +64,23 @@ class ListenServer implements Runnable{
                 if(obj.get("type").equals("chat")){
                     System.out.println(obj.get("Time")+" "+obj.get("Uname")+":"+obj.get("msg"));
                     //BufferedWriter out =new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                    for(String i: Server.socketHashMap.keySet())
-                    {
-                        BufferedWriter out =new BufferedWriter(new OutputStreamWriter(Server.socketHashMap.get(i).getOutputStream()));
-                        out.write(obj.get("Time")+" "+obj.get("Uname")+":"+obj.get("msg"));
+                    if((Integer) obj.get("chatType") == 1)  {//私聊模式
+                        String toUname = (String) obj.get("toUname");
+                        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(Server.socketHashMap.get(toUname).getOutputStream()));
+                        out.write("私聊 "+obj.get("Time")+" "+obj.get("Uname")+":"+obj.get("msg"));
                         out.write("\n");
                         out.flush();
-                        //out.close();
+                    }else if((Integer) obj.get("chatType") == 2)  {//群聊模式
+                        for(String i: Server.socketHashMap.keySet())
+                        {
+                            if(!i.equals(Uname)){
+                                BufferedWriter out =new BufferedWriter(new OutputStreamWriter(Server.socketHashMap.get(i).getOutputStream()));
+                                out.write("群聊 "+obj.get("Time")+" "+obj.get("Uname")+":"+obj.get("msg"));
+                                out.write("\n");
+                                out.flush();
+                                //out.close();
+                            }
+                        }
                     }
                 }else if(obj.get("type").equals("User")){
                     //System.out.println(obj);//测试obj是否发送成功
@@ -113,6 +115,15 @@ class ListenServer implements Runnable{
                             BroadCast(content);
                             break;
                     }
+                }else if(obj.get("type").equals("getUserList")) {//发送当前在线的用户名单
+                    String UserNameList = "当前在线的用户名单:";
+                    for(String i : Server.userHashMap.keySet()){
+                        UserNameList = UserNameList.concat(i+",");
+                    }
+                    BufferedWriter out =new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                    out.write(UserNameList);
+                    out.write("\n");
+                    out.flush();
                 }
             }
         }catch (Exception e){
@@ -121,6 +132,7 @@ class ListenServer implements Runnable{
             try {
                 socket.close();
                 Server.socketHashMap.remove(Uname);
+                Server.userHashMap.remove(Uname);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -204,37 +216,6 @@ class ListenServer implements Runnable{
             out.write("\n");
             out.flush();
             //out.close();
-        }
-    }
-}
-
-/**
- * 这个类是服务端给客户端发送信息
- *  @author 周文瑞 20373804
- */
-class ServerSend implements Runnable{
-    private Socket socket;
-    private int thiscount;
-    public ServerSend(int thiscount,Socket socket){
-        this.socket = socket;
-        this.thiscount = thiscount;
-    }
-    @Override
-    public void run(){
-        try {
-            ObjectOutputStream oout = new ObjectOutputStream(socket.getOutputStream());
-            Scanner scan = new Scanner(System.in);
-            while(true){
-                System.out.print("请输入要发送的内容:");
-                String str = scan.nextLine();
-                JSONObject obj = new JSONObject();
-                obj.put("type","chat");
-                obj.put("msg",str);
-                oout.writeObject(obj);
-                oout.flush();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

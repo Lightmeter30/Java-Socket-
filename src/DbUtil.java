@@ -1,12 +1,12 @@
 import java.sql.*;
 
 /**
- * @describe 数据库工具类
- * @author 周文瑞 20373804
+ * 数据库工具类
+ * @author takune
  */
 public class DbUtil {
     /**
-     * @describe  连接数据库
+     * 连接数据库
      * @return con
      * @throws Exception
      */
@@ -20,7 +20,7 @@ public class DbUtil {
         return con;
     }
     /**
-     * @describe  断开数据库,建议不用数据库时可以断开
+     * 断开数据库,建议不用数据库时可以断开
      * @param con
      */
     public static void disConnection(Connection con)throws Exception{

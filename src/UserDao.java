@@ -39,7 +39,7 @@ public class UserDao {
      * @param u 用户类
      * @return 返回值为1时注册成功;返回0时注册失败
      * @throws Exception
-     * @author: 周文瑞 20373804
+     * @author: takune
      */
     public static int register (Connection con, User u)throws Exception{
         String sql = "INSERT INTO User(Uname,PassWord) VALUES(?,?)";
