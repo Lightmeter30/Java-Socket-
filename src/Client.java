@@ -10,14 +10,13 @@ import java.util.concurrent.Executors;
 
 /**
  * 这是客户端类
- *  @author 周文瑞 20373804
+ *  @author takune
  */
 public class Client {
     private static Socket socket;
     private static boolean connection_state = false;
     private static Scanner scanner = new Scanner(System.in);
     private static User My;
-    private static UserDao userDao = new UserDao();
     private static Connection con;
     //private static ExecutorService executorService = Executors.newFixedThreadPool(10);
     /**
@@ -69,7 +68,7 @@ public class Client {
         u.setPassword(PassWord);
         try {
             con = DbUtil.getConnection();
-            My = userDao.Login(con,u);
+            My = UserDao.Login(con,u);
             if(My == null ){
                 System.out.println("登录失败,账号不存在或密码错误!");
                 DbUtil.disConnection(con);
@@ -86,6 +85,10 @@ public class Client {
         }
     }
 
+    /**
+     * 这是用户端用来注册的函数register(),注册成功后会直接跳转到login()
+     * @return 当注册成功时返回true,注册失败时返回false
+     */
     public static boolean register(){
         String Uname,PassWord,PassWord1;
         System.out.print("请输入注册用户名:");
@@ -106,7 +109,7 @@ public class Client {
         u.setPassword(PassWord);
         try{
             con = DbUtil.getConnection();
-            int result = userDao.register(con,u);
+            int result = UserDao.register(con,u);
             DbUtil.disConnection(con);
             if(result == 1)
                 return true;
@@ -191,7 +194,7 @@ public class Client {
 
 /**
  * 这是监听客户端的类
- *  @author 周文瑞 20373804
+ *  @author takune
  */
 class ClientListen implements Runnable{
     private Socket socket;
@@ -209,7 +212,34 @@ class ClientListen implements Runnable{
             while(true){
                 //JSONObject obj = (JSONObject) (oin.readObject());
                 String str = oin.readLine();
-                System.out.println(str);
+                if(str.contains(":")){//打印聊天消息和通告
+                    System.out.println(str);
+                }
+                else
+                {
+                    switch (str){
+                        case "AddAdmin":
+                            if(My.getIsAdmin() == 0){
+                                My.setIsAdmin(1);
+                                System.out.println("您已被设置为管理员!");
+                                //System.out.println(My.getIsAdmin());//测试一下是否设置成功
+                            }
+                            break;
+                        case "Ban":
+                            if(My.getStatus() == 1){
+                                My.setStatus(0);
+                                System.out.println("您已经被管理员禁言!");
+                                //System.out.println(My.getStatus());//测试一下是否设置成功
+                            }
+                            break;
+                        case "DisBan":
+                            if(My.getStatus() == 0){
+                                My.setStatus(1);
+                                System.out.println("您已经被管理员解除禁言");
+                                //System.out.println(My.getStatus());//测试一下是否设置成功
+                            }
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -239,16 +269,23 @@ class ClientSend implements Runnable{
             while(true){
                 String str = scan.nextLine();
                 JSONObject obj = new JSONObject();
-                if(str.equals("syscall") && My.getIsAdmin() == 1){//只有管理员才能试用
-                    System.out.println("进入管理员模式!");
-                    Admin();
+                if(str.equals("syscall")){//只有管理员才能试用
+                    System.out.println("进入Syscall模式!");
+                    System.out.print("请输入以下五个命令(AddAdmin,Ban,DisBan,Exit,BroadCast):");
+                    Syscall();
                 } else{
-                    obj.put("type","chat");
-                    obj.put("msg",str);
-                    obj.put("Uname",My.getUname());
-                    obj.put("Time",df.format(System.currentTimeMillis()));
-                    oout.writeObject(obj);
-                    oout.flush();
+                    if(My.getStatus() == 1) {
+                        obj.put("type","chat");
+                        obj.put("msg",str);
+                        obj.put("Uname",My.getUname());
+                        obj.put("Time",df.format(System.currentTimeMillis()));
+                        oout.writeObject(obj);
+                        oout.flush();
+                    }
+                    else {
+                        System.out.println("您已被禁言!");
+                    }
+
                 }
             }
         } catch (IOException e) {
@@ -265,45 +302,52 @@ class ClientSend implements Runnable{
      * 管理者模式
      * @throws IOException
      */
-    public void Admin() throws IOException{
+    public void Syscall() throws IOException{
         while(true){
-            System.out.print("请输入以下五个命令(AddAdmin,Ban,DisBan,Exit,BroadCast):");
             String str = scan.nextLine();
             String name ;
             JSONObject obj = new JSONObject();
             obj.put("type","syscall");
             switch (str){
                 case "AddAdmin":
-                    System.out.print("请输入你要设置成管理员的用户名:");
-                    name = scan.nextLine();
-                    obj.put("command","AddAdmin");
-                    obj.put("Uname",name);
-                    oout.writeObject(obj);
-                    oout.flush();
+                    if(My.getIsAdmin() == 1){
+                        System.out.print("请输入你要设置成管理员的用户名:");
+                        name = scan.nextLine();
+                        obj.put("command","AddAdmin");
+                        obj.put("Uname",name);
+                        oout.writeObject(obj);
+                        oout.flush();
+                    }
                     break;
                 case "Ban":
-                    System.out.print("请输入你要禁言的用户名:");
-                    name = scan.nextLine();
-                    obj.put("command","Ban");
-                    obj.put("Uname",name);
-                    oout.writeObject(obj);
-                    oout.flush();
+                    if(My.getIsAdmin() == 1){
+                        System.out.print("请输入你要禁言的用户名:");
+                        name = scan.nextLine();
+                        obj.put("command","Ban");
+                        obj.put("Uname",name);
+                        oout.writeObject(obj);
+                        oout.flush();
+                    }
                     break;
                 case "DisBan":
-                    System.out.print("请输入你要解禁的用户名:");
-                    name = scan.nextLine();
-                    obj.put("command","DisBan");
-                    obj.put("Uname",name);
-                    oout.writeObject(obj);
-                    oout.flush();
+                    if(My.getIsAdmin() == 1){
+                        System.out.print("请输入你要解禁的用户名:");
+                        name = scan.nextLine();
+                        obj.put("command","DisBan");
+                        obj.put("Uname",name);
+                        oout.writeObject(obj);
+                        oout.flush();
+                    }
                     break;
                 case "BroadCast":
-                    System.out.print("请输入广播内容:");
-                    name = scan.nextLine();
-                    obj.put("command","BroadCast");
-                    obj.put("msg",name);
-                    oout.writeObject(obj);
-                    oout.flush();
+                    if(My.getIsAdmin() == 1){
+                        System.out.print("请输入广播内容:");
+                        name = scan.nextLine();
+                        obj.put("command","BroadCast");
+                        obj.put("msg",name);
+                        oout.writeObject(obj);
+                        oout.flush();
+                    }
                     break;
                 case "Exit":
                     System.out.println("退出管理员模式!");
