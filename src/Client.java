@@ -330,8 +330,10 @@ class ClientSend implements Runnable{
                     System.out.println("进入Syscall模式!");
                     if(My.getIsAdmin() == 1 && Client.getChatType() == 2)//管理员在群聊状态下的syscall指令
                         System.out.print("请输入以下七条命令(AddAdmin,Ban,DisBan,BroadCast,ChangeChatType,ChangePassWord,Exit):");
-                    else
-                        System.out.print("请输入一下两条指令(ChangeChatType,ChangePassWord,Exit):");
+                    else if(My.getIsAdmin() == 0 && Client.getChatType() == 2)  //普通用户在群聊状态下的syscall指令
+                        System.out.print("请输入一下三条指令(ChangeChatType,ChangePassWord,Exit):");
+                    else    //私聊状态下的syscall指令
+                        System.out.print("请输入一下四条指令(ChangeChatType,ChangePassWord,ChangeChatMember,Exit):");
                     Syscall();
                 }else if(Client.getChatType() == 1){//私聊
                     obj.put("type","chat");
@@ -420,6 +422,13 @@ class ClientSend implements Runnable{
                         oout.flush();
                     }
                     break;
+                case "ChangeChatMember":
+                    if(Client.getChatType() == 1){
+                        Client.privateChat(oout);
+                        System.out.println("切换私聊成员为"+Client.privateChatName);
+                        System.out.println("退出syscall模式!");
+                    }
+                    return;
                 case "ChangeChatType":
                     if(Client.getChatType() == 1){
                         Client.setChatType(2);
