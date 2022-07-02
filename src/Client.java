@@ -329,9 +329,9 @@ class ClientSend implements Runnable{
                 if(str.equals("syscall")){
                     System.out.println("进入Syscall模式!");
                     if(My.getIsAdmin() == 1 && Client.getChatType() == 2)//管理员在群聊状态下的syscall指令
-                        System.out.print("请输入以下六条命令(AddAdmin,Ban,DisBan,Exit,BroadCast,ChangeChatType):");
+                        System.out.print("请输入以下七条命令(AddAdmin,Ban,DisBan,BroadCast,ChangeChatType,ChangePassWord,Exit):");
                     else
-                        System.out.print("请输入一下一条指令(ChangeChatType):");
+                        System.out.print("请输入一下两条指令(ChangeChatType,ChangePassWord,Exit):");
                     Syscall();
                 }else if(Client.getChatType() == 1){//私聊
                     obj.put("type","chat");
@@ -429,9 +429,40 @@ class ClientSend implements Runnable{
                         Client.setChatType(1);
                         System.out.println("切换为私聊模式!");
                     }
+
                 case "Exit":
                     System.out.println("退出syscall模式!");
                     return;
+
+                case "ChangePassWord":
+                    String newPassWord,newPassWord1;
+                    System.out.print("请输入新密码:");
+                    newPassWord = scan.nextLine();
+                    System.out.print("请再次输入新密码:");
+                    newPassWord1 = scan.nextLine();
+                    while(!newPassWord.equals(newPassWord1)){
+                        System.out.println("前后两次密码输入不一致,请重新输入!");
+                        System.out.print("请输入新密码:");
+                        newPassWord = scan.nextLine();
+                        System.out.print("请再次输入新密码:");
+                        newPassWord1 = scan.nextLine();
+                    }
+                    User u = new User();
+                    u.setUname(My.getUname());
+                    u.setPassword(newPassWord);
+                    Connection con;
+                    try{
+                        con = DbUtil.getConnection();
+                        boolean result = UserDao.changePassWord(con,u);
+                        DbUtil.disConnection(con);
+                        if(result)
+                            System.out.println("密码修改成功!");
+                        else
+                            System.out.println("密码修改失败!");
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        System.out.println("密码修改失败");
+                    }
             }
         }
     }

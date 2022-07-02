@@ -7,6 +7,7 @@ import java.sql.ResultSet;
  * @author takune
  */
 public class UserDao {
+
     /**
      * 用户登录函数
      * @param con 连接数据库的Connection类
@@ -83,6 +84,24 @@ public class UserDao {
         String sql = "UPDATE User SET isAdmin = ? WHERE Uname = ?";
         PreparedStatement pstmt = con.prepareStatement(sql);
         pstmt.setInt(1,u.getIsAdmin());
+        pstmt.setString(2,u.getUname());
+        int result = pstmt.executeUpdate();
+        pstmt.close();
+        if ( result <= 0 ) return false;
+        return true;
+    }
+
+    /**
+     * changePassWord()函数用来修改用户自己的密码
+     * @param con 连接数据库的Connection类
+     * @param u 用户类
+     * @return 修改密码成功时返回true,否则返回false
+     * @throws Exception
+     */
+    public static boolean changePassWord(Connection con, User u) throws Exception{
+        String sql = "UPDATE User SET PassWord = ? WHERE Uname = ?";
+        PreparedStatement pstmt = con.prepareStatement(sql);
+        pstmt.setString(1,u.getPassword());
         pstmt.setString(2,u.getUname());
         int result = pstmt.executeUpdate();
         pstmt.close();
