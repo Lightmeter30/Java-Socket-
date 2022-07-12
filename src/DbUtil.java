@@ -11,9 +11,9 @@ public class DbUtil {
      * @throws Exception
      */
     public static Connection getConnection()throws Exception{
-        String dbUrl = "jdbc:mysql://43.138.40.55:3306/JavaPersonal";//数据库连接地址
-        String dbUsername = "javauser"; //数据库用户名字
-        String dbPassWord = "123456";   //数据库用户密码
+        String dbUrl = "";//数据库连接地址
+        String dbUsername = ""; //数据库用户名字
+        String dbPassWord = "";   //数据库用户密码
         //String jdbcName = "com.mysql.jdbc.Driver";  //mysql驱动;
         //Class.forName(jdbcName);
         Connection con = DriverManager.getConnection(dbUrl,dbUsername,dbPassWord);
